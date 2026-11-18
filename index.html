@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>목표관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf6f4; --card:#ffffff; --text:#3b2f2c; --muted:#9a8a84; --line:#efe4df;
+    --accent:#e0694d; --accent-soft:#fde9e2; --btn:#ec7d61; --btn-text:#ffffff;
+    --track:#f4ece8; --fill1:#ffd3bf; --fill2:#f39a7f; --done1:#c4e8cf; --done2:#6cbf8a; --done-text:#3f8a5a;
+    --check-line:#e6d6cf; --on-done:#ffffff;
+    --warn:#bf5d3c; --warn-bg:#fdebe3; --ok:#3f8a5a; --ok-bg:#eaf6ed; --danger:#d9483b;
+    --input-bg:#fffcfb; --shadow:0 10px 30px rgba(150,90,70,.10);
+    --t1:#ece6ff; --t2:#dff6ec; --t3:#e3efff; --t4:#e2f4f6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1d1817; --card:#282120; --text:#f6ece8; --muted:#b4a49e; --line:#3a302d;
+      --accent:#ffa58a; --accent-soft:#3d2a24; --btn:#f2967a; --btn-text:#2a140d;
+      --track:#352c29; --fill1:#b56a52; --fill2:#f2967a; --done1:#86d9b8; --done2:#4fbf8f; --done-text:#7fe2b7;
+      --check-line:#54443f; --on-done:#14251d;
+      --warn:#ffb79f; --warn-bg:#3d2a24; --ok:#7fe2b7; --ok-bg:#1f3329; --danger:#ff8a80;
+      --input-bg:#221c1b; --shadow:0 10px 30px rgba(0,0,0,.4);
+      --t1:#2d2747; --t2:#1f3329; --t3:#22304a; --t4:#1e3338;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1d1817; --card:#282120; --text:#f6ece8; --muted:#b4a49e; --line:#3a302d;
+    --accent:#ffa58a; --accent-soft:#3d2a24; --btn:#f2967a; --btn-text:#2a140d;
+    --track:#352c29; --fill1:#b56a52; --fill2:#f2967a; --done1:#86d9b8; --done2:#4fbf8f; --done-text:#7fe2b7;
+    --check-line:#54443f; --on-done:#14251d;
+    --warn:#ffb79f; --warn-bg:#3d2a24; --ok:#7fe2b7; --ok-bg:#1f3329; --danger:#ff8a80;
+    --input-bg:#221c1b; --shadow:0 10px 30px rgba(0,0,0,.4);
+    --t1:#2d2747; --t2:#1f3329; --t3:#22304a; --t4:#1e3338;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Gowun Dodum","Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;line-height:1.55}
+  h2,h3,.brand,.big,.tile b,.gcard .t,.dhead .title,.primary{font-family:"Jua","Gowun Dodum",system-ui,sans-serif;font-weight:400;letter-spacing:.01em}
+  input,button{font:inherit;color:inherit}
+  input[type=text],input[type=number]{background:var(--input-bg);border:1.5px solid var(--line);border-radius:14px;padding:9px 14px;min-width:0;transition:border-color .2s,box-shadow .2s}
+  input[type=text]:focus,input[type=number]:focus{outline:none;border-color:var(--btn);box-shadow:0 0 0 4px var(--accent-soft)}
+  button:focus-visible{outline:3px solid var(--btn);outline-offset:2px}
+  button{cursor:pointer;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:9px 16px;transition:all .2s}
+  button:hover{border-color:var(--btn)}
+  .primary{background:var(--btn);border-color:var(--btn);color:var(--btn-text);font-size:1.02rem}
+  .primary:hover{filter:brightness(1.05);transform:translateY(-1px)}
+  .ghost{border:none;background:none;color:var(--muted);padding:6px 10px}
+  .ghost:hover{color:var(--danger);background:var(--accent-soft)}
+  .small{font-size:.85rem;padding:6px 14px}
+
+  /* 둥근 체크박스 */
+  input[type=checkbox]{appearance:none;-webkit-appearance:none;width:24px;height:24px;margin:0;border-radius:50%;
+    border:2px solid var(--check-line);background:var(--input-bg);cursor:pointer;display:grid;place-content:center;transition:all .2s;flex:none}
+  input[type=checkbox]::before{content:"";width:10px;height:5px;border-left:2.5px solid var(--on-done);border-bottom:2.5px solid var(--on-done);
+    transform:rotate(-45deg) scale(0);margin-top:-3px;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+  input[type=checkbox]:hover{border-color:var(--done2)}
+  input[type=checkbox]:checked{background:var(--done2);border-color:var(--done2)}
+  input[type=checkbox]:checked::before{transform:rotate(-45deg) scale(1)}
+  input[type=checkbox]:focus-visible{outline:3px solid var(--done1);outline-offset:2px}
+
+  /* ---------- 상단 바 + 메뉴 ---------- */
+  .topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px)}
+  .topbar .in{max-width:880px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:12px;position:relative}
+  .menu-btn{width:44px;height:44px;aspect-ratio:1/1;padding:0;border-radius:14px;display:grid;place-content:center;gap:4px;
+    background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow)}
+  .menu-btn span{display:block;width:18px;height:2.5px;border-radius:2px;background:var(--text);transition:transform .25s,opacity .2s}
+  .menu-btn[aria-expanded="true"] span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+  .menu-btn[aria-expanded="true"] span:nth-child(2){opacity:0}
+  .menu-btn[aria-expanded="true"] span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+  .brand{font-size:1.3rem;border:none;background:none;padding:0;border-radius:8px}
+  .brand em{font-style:normal;color:var(--accent)}
+  .menu{position:absolute;top:66px;left:16px;width:min(300px,calc(100vw - 32px));background:var(--card);border:1.5px solid var(--line);
+    border-radius:22px;box-shadow:var(--shadow);padding:10px;display:none;max-height:70vh;overflow-y:auto}
+  .menu.open{display:block;animation:drop .22s ease}
+  @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .nav{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;padding:10px 12px;border-radius:14px;margin-bottom:2px}
+  .nav:hover{background:var(--bg)}
+  .nav.active{background:var(--accent-soft);color:var(--accent)}
+  .nav .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav .np{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;background:var(--track);border-radius:999px;padding:1px 8px}
+  .nav .np.full{color:var(--done-text);background:var(--ok-bg)}
+  .nav .dot{width:8px;height:8px;border-radius:50%;background:var(--fill2);flex:none}
+  .nav .dot.full{background:var(--done2)}
+  .nav-label{font-size:.75rem;color:var(--muted);padding:10px 12px 4px}
+  .menu hr{border:none;border-top:1.5px dashed var(--line);margin:8px 4px}
+  .nav.add{color:var(--accent)}
+
+  main{max-width:880px;margin:0 auto;padding:12px 16px 64px}
+  h2{font-size:1.7rem;margin:6px 0 2px}
+  .sub{color:var(--muted);margin:0 0 22px}
+
+  /* ---------- 전체 목표 ---------- */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .tile{border-radius:22px;padding:16px 18px;background:var(--t1)}
+  .tile:nth-child(2){background:var(--t2)} .tile:nth-child(3){background:var(--t3)} .tile:nth-child(4){background:var(--t4)}
+  .tile b{display:block;font-size:1.9rem;line-height:1.2;font-variant-numeric:tabular-nums}
+  .tile span{color:var(--muted);font-size:.85rem}
+  .new-goal{display:flex;gap:8px;margin-bottom:22px}
+  .new-goal input{flex:1;border-radius:999px;padding-left:18px;background:var(--card)}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  .gcard{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:18px;text-align:left;
+    display:flex;flex-direction:column;gap:12px;width:100%}
+  .gcard:hover{border-color:var(--g2);transform:translateY(-2px);box-shadow:var(--shadow)}
+  .gcard.full{border-color:var(--g1)}
+  .gcard .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .gcard .t{font-size:1.1rem;word-break:keep-all}
+  .gcard .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.85rem}
+  .gcard .meta b{color:var(--text);font-variant-numeric:tabular-nums}
+  .status{font-size:.72rem;border-radius:999px;padding:3px 10px;white-space:nowrap;background:var(--track);color:var(--muted)}
+  .status.ing{background:var(--accent-soft);color:var(--accent)}
+  .status.full{background:var(--ok-bg);color:var(--ok)}
+  .empty-state{text-align:center;color:var(--muted);padding:48px 16px;border:2px dashed var(--check-line);border-radius:28px}
+
+  /* ---------- 진행 막대 ---------- */
+  .pbar{position:relative;height:12px;background:var(--track);border-radius:999px;overflow:hidden}
+  .pbar>i{position:absolute;inset:0 auto 0 0;width:0;border-radius:999px;
+    background:linear-gradient(90deg,var(--g1,var(--fill1)),var(--g2,var(--fill2)));transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  /* 목표별 색상 5가지 (만든 순서대로 돌아가며 적용) */
+  .c0{--g1:#ffd3bf;--g2:#f08a6c;--gt:#d9654a}   /* 코랄 */
+  .c1{--g1:#c4e8cf;--g2:#5fb882;--gt:#3f8a5a}   /* 그린 */
+  .c2{--g1:#f8ecc0;--g2:#e6c45a;--gt:#9c7f1f}   /* 버터 */
+  .c3{--g1:#c8ebe8;--g2:#4fb0aa;--gt:#2f8a85}   /* 청록 */
+  .c4{--g1:#d8e5f2;--g2:#7fa5cc;--gt:#4f77a0}   /* 더스티 블루 */
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .hero .big{color:var(--g2)} }
+  :root[data-theme="dark"] .hero .big{color:var(--g2)}
+  .gcard .t::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--g2);margin-right:8px;vertical-align:1px}
+  .gcard .status.ing{background:color-mix(in srgb,var(--g1) 55%,transparent);color:var(--gt)}
+
+  .hero{background:var(--card);border:1.5px solid var(--line);border-radius:28px;padding:22px 24px 18px;margin-bottom:16px}
+  .hero .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .hero .lbl{color:var(--muted)}
+  .hero .big{font-size:2.6rem;line-height:1;color:var(--gt,var(--accent));font-variant-numeric:tabular-nums}
+  .hero .pbar{height:30px}
+  .donemsg{display:none;background:var(--ok-bg);color:var(--ok);border-radius:999px;padding:5px 14px;font-size:.9rem}
+  .complete .donemsg{display:inline-block;animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  .ticks{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;margin-top:6px;padding:0 4px;font-variant-numeric:tabular-nums}
+
+  /* ---------- 상세 ---------- */
+  .back{border:none;background:var(--card);color:var(--muted);padding:6px 14px;margin-bottom:12px;font-size:.9rem}
+  .back:hover{color:var(--accent)}
+  .dhead{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+  .dhead .title{flex:1;font-size:1.6rem;border-color:transparent;background:transparent;padding:2px 12px;margin-left:-12px}
+  .dhead .title:hover{border-color:var(--line)}
+
+  .panel{background:var(--card);border:1.5px solid var(--line);border-radius:28px;padding:18px 22px}
+  .panel h3{margin:0 0 6px;font-size:1.15rem}
+  .tasks{list-style:none;margin:0;padding:0}
+  .task{display:flex;align-items:center;gap:8px;padding:4px 8px;margin:0 -8px;border-radius:16px;transition:background .2s}
+  .task:hover{background:var(--bg)}
+  .task .name{flex:1;border-color:transparent;background:transparent;padding:7px 10px}
+  .task .name:hover{border-color:var(--line)}
+  .task.done .name{text-decoration:line-through;color:var(--muted)}
+  .weight{display:flex;align-items:center;gap:2px;flex:none;color:var(--muted);font-size:.78rem}
+  .weight input{width:50px;padding:4px 6px;text-align:right;font-size:.8rem;border-radius:999px}
+  .task .ghost{flex:none;padding:4px 8px;font-size:.85rem}
+  .add-task{display:flex;gap:8px;margin-top:14px}
+  .add-task input{border-radius:999px}
+  .add-task input[name=name]{flex:1}
+  .add-task input[name=weight]{width:90px;font-size:.85rem}
+  .weight input.auto::placeholder{color:var(--accent);opacity:.75}
+  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+  /* 숫자칸 + ▲▼ 를 하나의 칸으로 */
+  .wbox{display:inline-flex;align-items:stretch;height:28px;background:var(--input-bg);border:1.5px solid var(--line);
+    border-radius:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+  .wbox:hover{border-color:color-mix(in srgb,var(--g2,var(--btn)) 45%,var(--line))}
+  .wbox:focus-within{border-color:var(--g2,var(--btn));box-shadow:0 0 0 3px color-mix(in srgb,var(--g1,var(--accent-soft)) 70%,transparent)}
+  .wbox.lg{height:42px;border-radius:14px}
+  .task .wbox input,.add-task .wbox input[name=weight]{width:36px;height:100%;border:none;border-radius:0;background:transparent;
+    padding:0 6px 0 10px;text-align:right;font-size:.85rem;box-shadow:none;outline:none}
+  .add-task .wbox input[name=weight]{width:62px;padding-left:12px}
+  .wbox input[type=number]:focus{box-shadow:none;border:none}
+  .spin{display:flex;flex-direction:column;border-left:1.5px solid var(--line)}
+  .sp{flex:1;width:22px;padding:0;border:none;border-radius:0;background:transparent;color:var(--muted);font-size:7px;line-height:1;
+    display:grid;place-items:center;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+  .sp+.sp{border-top:1.5px solid var(--line)}
+  .sp:hover{background:color-mix(in srgb,var(--g1,var(--accent-soft)) 60%,transparent);color:var(--gt,var(--accent))}
+  .sp:active{background:var(--g1,var(--accent-soft))}
+  .lg .sp{width:26px}
+  .unit{color:var(--muted);font-size:.8rem;margin-left:4px}
+  .remain{display:inline-block;margin-left:6px;vertical-align:2px;padding:2px 10px;border-radius:999px;
+    font-family:"Noto Sans KR","Malgun Gothic",sans-serif;font-size:.74rem;font-weight:500;
+    background:color-mix(in srgb,var(--g1,var(--accent-soft)) 70%,transparent);color:var(--gt,var(--accent));animation:pop .3s ease}
+  .remain[hidden]{display:none}
+  .nw{display:flex;align-items:center}
+  .add-task input[name=weight]::placeholder{font-size:.8rem}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:40;
+    background:var(--text);color:var(--card);padding:12px 24px;border-radius:999px;font-size:.9rem;
+    width:min(560px,calc(100vw - 32px));text-align:center;line-height:1.45;word-break:keep-all;
+    font-family:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-weight:500;letter-spacing:-.01em;
+    box-shadow:var(--shadow);transition:opacity .25s,transform .25s}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  .sum{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.88rem;
+    border-radius:18px;padding:9px 16px;background:var(--ok-bg);color:var(--ok)}
+  .sum.bad{background:var(--warn-bg);color:var(--warn)}
+  .sum .msg{flex:1;min-width:180px}
+  .sum button{display:none;background:var(--card);border-color:transparent}
+  .sum.bad button{display:inline-block}
+  .empty-tasks{color:var(--muted);padding:12px 0;font-size:.9rem}
+
+  .confetti{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:30;animation:fly 1.5s ease-out forwards}
+  @keyframes fly{0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+
+  @media (max-width:640px){
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .panel{padding:16px}
+    .add-task input[name=weight]{width:84px;padding:9px 10px}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="in">
+    <button class="brand" data-nav="all" title="처음 화면으로">목표<em>관리</em></button>
+  </div>
+</header>
+<main id="main"></main>
+
+<script>
+const KEY = 'goal-tracker-v1', VIEW_KEY = 'goal-tracker-view';
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = v => (Math.round(v * 10) / 10).toString();
+
+let goals = load();
+let view = 'all';
+try { const v = localStorage.getItem(VIEW_KEY); if (v && (v === 'all' || goals.some(g => g.id === v))) view = v; } catch(e) {}
+const lastDone = {};
+const COLOR_COUNT = 5;
+goals.forEach((g, i) => { if (typeof g.color !== 'number') g.color = i % COLOR_COUNT; });
+const colorOf = g => 'c' + (g.color % COLOR_COUNT);
+const nextColor = () => goals.length ? (goals[goals.length - 1].color + 1) % COLOR_COUNT : 0;
+
+function load(){
+  try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch(e) {}
+  return [
+    { id: uid(), title: '영어 회화 시험 합격', tasks: [
+      { id: uid(), name: '필수 단어 500개 외우기', weight: 30, done: true },
+      { id: uid(), name: '회화 수업 10회 듣기', weight: 50, done: false },
+      { id: uid(), name: '모의 시험 3회 보기', weight: 20, done: false } ] },
+    { id: uid(), title: '하프 마라톤 완주', tasks: [
+      { id: uid(), name: '주 3회 5km 달리기 (4주)', weight: 40, done: true },
+      { id: uid(), name: '10km 기록 측정', weight: 30, done: true },
+      { id: uid(), name: '대회 신청하기', weight: 30, done: true } ] },
+  ];
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(goals)); localStorage.setItem(VIEW_KEY, view); } catch(e) {}
+}
+
+// 비중: 숫자 = 직접 설정, null = 자동(남은 비중을 자동 할 일끼리 1/N로 나눔)
+const isManual = t => typeof t.weight === 'number';
+const manualSum = (g, except) => g.tasks.reduce((s, t) => s + (t !== except && isManual(t) ? t.weight : 0), 0);
+const maxFor = (g, t) => Math.max(0, 100 - manualSum(g, t));
+function effWeights(g){
+  const mSum = manualSum(g);
+  const scale = mSum > 100 ? 100 / mSum : 1;            // 예전 데이터가 100%를 넘을 때만 비율로 줄임
+  const autos = g.tasks.filter(t => !isManual(t)).length;
+  const each = autos ? Math.max(0, 100 - mSum * scale) / autos : 0;
+  const map = {};
+  g.tasks.forEach(t => { map[t.id] = isManual(t) ? t.weight * scale : each; });
+  return map;
+}
+function stats(g){
+  const n = g.tasks.length;
+  const eff = effWeights(g);
+  const total = g.tasks.reduce((s, t) => s + eff[t.id], 0);
+  const doneN = g.tasks.filter(t => t.done).length;
+  const allDone = n > 0 && doneN === n;
+  let pct;
+  if (allDone) pct = 100;
+  else if (total > 0) pct = g.tasks.filter(t => t.done).reduce((s, t) => s + eff[t.id], 0) / total * 100;
+  else pct = n ? doneN / n * 100 : 0;
+  return { n, doneN, eff, total, pct: Math.min(100, Math.max(0, pct)), allDone };
+}
+
+// ---------- 비중 ▲▼ 버튼 (5% 단위, 꾹 누르면 연속) ----------
+const STEP = 5;
+const OVER_MSG = '각 할 일의 비중 합계는 100%를 초과할 수 없어요';
+const SPIN = `<span class="spin"><button type="button" class="sp" data-step="1" aria-label="비중 5% 올리기">▲</button><button type="button" class="sp" data-step="-1" aria-label="비중 5% 내리기">▼</button></span>`;
+function stepValue(curV, dir, max){
+  let v = dir > 0 ? Math.floor(curV / STEP + 1e-9) * STEP + STEP : Math.ceil(curV / STEP - 1e-9) * STEP - STEP;
+  return Math.min(max, Math.max(0, v));
+}
+function doStep(btn){                                    // 성공하면 true, 더 못 움직이면 false
+  const g = cur(); if (!g) return false;
+  const dir = Number(btn.dataset.step);
+  const li = btn.closest('[data-task]');
+  if (li) {
+    const t = taskOf(g, btn); if (!t) return false;
+    const curV = isManual(t) ? t.weight : stats(g).eff[t.id];
+    const max = maxFor(g, t);
+    if (dir > 0 && curV >= max - 1e-9) { toast(OVER_MSG); return false; }
+    if (dir < 0 && curV <= 0) return false;
+    t.weight = stepValue(curV, dir, max);
+    li.querySelector('.weight input').value = fmt(t.weight);
+    refreshDetail(g); save();
+  } else {
+    const inp = btn.closest('.add-task').weight;
+    const max = Math.max(0, 100 - manualSum(g));
+    let curV = parseFloat(inp.value);
+    if (isNaN(curV)) curV = parseFloat(inp.placeholder.replace(/[^0-9.]/g, '')) || 0;
+    if (dir > 0 && curV >= max - 1e-9) { toast(OVER_MSG); return false; }
+    if (dir < 0 && curV <= 0) return false;
+    inp.value = fmt(stepValue(curV, dir, max));
+  }
+  return true;
+}
+let holdT, holdI;
+const stopHold = () => { clearTimeout(holdT); clearInterval(holdI); };
+document.addEventListener('pointerdown', e => {
+  const b = e.target.closest('.sp'); if (!b) return;
+  e.preventDefault();
+  stopHold();
+  if (!doStep(b)) return;
+  holdT = setTimeout(() => { holdI = setInterval(() => { if (!doStep(b)) stopHold(); }, 110); }, 400);
+});
+['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, stopHold));
+document.addEventListener('pointerout', e => { if (e.target.closest('.sp')) stopHold(); });
+
+let toastTimer;
+function toast(msg){
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+const statusOf = s => s.allDone ? ['full', '달성 완료'] : s.pct > 0 ? ['ing', '진행 중'] : ['', '시작 전'];
+
+
+// ---------- 전체 목표 화면 ----------
+function renderAll(){
+  const ss = goals.map(stats);
+  document.getElementById('main').innerHTML = `
+    <form class="new-goal" id="newGoal">
+      <input type="text" id="goalInput" placeholder="새 목표를 입력하세요 (예: 토익 800점 달성)" maxlength="60" required>
+      <button class="primary" type="submit">목표 추가</button>
+    </form>
+    ${goals.length ? `<div class="grid">${goals.map((g, i) => { const s = ss[i]; const [cls, label] = statusOf(s); return `
+      <button class="gcard ${colorOf(g)} ${s.allDone ? 'full' : ''}" data-nav="${g.id}">
+        <div class="top"><span class="t">${esc(g.title)}</span><span class="status ${cls}">${label}</span></div>
+        <div class="pbar"><i data-w="${s.pct}"></i></div>
+        <div class="meta"><span>할 일 ${s.doneN}/${s.n} 완료</span><b>${Math.round(s.pct)}%</b></div>
+      </button>`; }).join('')}</div>`
+      : `<div class="empty-state">아직 목표가 없어요.<br>위에서 첫 번째 목표를 추가해 보세요!</div>`}`;
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    document.querySelectorAll('.pbar > i[data-w]').forEach(i => i.style.width = i.dataset.w + '%')));
+}
+
+// ---------- 목표 상세 화면 ----------
+function renderDetail(g){
+  const tasks = g.tasks.length ? g.tasks.map(t => `
+    <li class="task ${t.done ? 'done' : ''}" data-task="${t.id}">
+      <input type="checkbox" data-act="toggle" ${t.done ? 'checked' : ''} aria-label="완료 표시">
+      <input type="text" class="name" data-act="rename-task" value="${esc(t.name)}" maxlength="60" aria-label="할 일">
+      <div class="weight"><span class="wbox"><input type="number" inputmode="decimal" data-act="weight" min="0" max="100" step="1" value="${isManual(t) ? t.weight : ''}" aria-label="비중 (비워 두면 자동)">${SPIN}</span><span class="unit">%</span></div>
+      <button class="ghost" data-act="del-task" title="할 일 삭제">✕</button>
+    </li>`).join('') : `<li class="empty-tasks">아직 할 일이 없어요. 아래에서 추가해 보세요.</li>`;
+
+  document.getElementById('main').innerHTML = `
+    <div class="detail ${colorOf(g)}" data-goal="${g.id}">
+      <button class="back" data-nav="all">← 전체 목표</button>
+      <div class="dhead">
+        <input type="text" class="title" data-act="rename-goal" value="${esc(g.title)}" maxlength="60" aria-label="목표 이름">
+        <button class="ghost" data-act="del-goal">목표 삭제</button>
+      </div>
+
+      <section class="hero">
+        <div class="row">
+          <span class="lbl">목표 달성률</span>
+          <span class="donemsg">🎉 목표 달성! 모든 할 일을 완료했어요</span>
+          <span class="big">0%</span>
+        </div>
+        <div class="pbar"><i></i></div>
+        <div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+      </section>
+
+      <section class="panel">
+        <h3>할 일 목록 <span class="remain" hidden></span></h3>
+        <ul class="tasks">${tasks}</ul>
+        <form class="add-task" data-act="add-task">
+          <input type="text" name="name" placeholder="할 일 추가" maxlength="60" required>
+          <div class="nw"><span class="wbox lg"><input type="number" inputmode="decimal" name="weight" placeholder="비중" min="0" max="100" step="1" aria-label="비중 (비워 두면 자동)">${SPIN}</span><span class="unit">%</span></div>
+          <button class="primary" type="submit">추가</button>
+        </form>
+      </section>
+    </div>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => refreshDetail(g, true)));
+}
+
+function refreshDetail(g, initial){
+  const el = document.querySelector(`.detail[data-goal="${g.id}"]`);
+  if (!el) return;
+  const { eff, total, pct, allDone } = stats(g);
+  el.querySelector('.hero .pbar > i').style.width = pct + '%';
+  el.querySelector('.big').textContent = Math.round(pct) + '%';
+  el.classList.toggle('complete', allDone);
+
+  el.querySelectorAll('.task').forEach(li => {
+    const t = g.tasks.find(x => x.id === li.dataset.task); if (!t) return;
+    const inp = li.querySelector('.weight input');
+    const real = total > 0 ? eff[t.id] / total * 100 : 0;
+    inp.classList.toggle('auto', !isManual(t));
+    inp.placeholder = fmt(eff[t.id]);
+    li.querySelector('.weight').title = isManual(t) ? `직접 설정 · 실제 반영 ${fmt(real)}%` : `자동 (남은 비중 1/N) · ${fmt(real)}%`;
+  });
+  // 새 할 일을 비중 없이 추가하면 받게 될 자동 비중 미리보기
+  const autos = g.tasks.filter(t => !isManual(t)).length;
+  // 남은 비중 표시: 자동 할 일이 없고 직접 입력한 합계가 100% 미만일 때만
+  const remain = el.querySelector('.remain');
+  const left = autos ? 0 : Math.max(0, 100 - manualSum(g));
+  remain.hidden = !(g.tasks.length && left > 0.05);
+  remain.textContent = `합계 ${fmt(manualSum(g))}%`;
+  remain.title = '비중 합계가 100%가 되도록 남은 비중을 할 일에 나눠 주세요';
+  el.querySelector('.add-task input[name=weight]').placeholder = '자동 ' + Math.round(Math.max(0, 100 - manualSum(g)) / (autos + 1));
+
+  if (!initial && allDone && !lastDone[g.id]) confetti(el.querySelector('.hero'));
+  lastDone[g.id] = allDone;
+}
+
+function confetti(anchor){
+  const r = anchor.getBoundingClientRect();
+  const colors = ['#ffd3bf', '#f39a7f', '#f7b8b0', '#c4e8cf', '#6cbf8a'];
+  for (let i = 0; i < 40; i++){
+    const c = document.createElement('i');
+    c.className = 'confetti';
+    c.style.left = (r.left + r.width * Math.random()) + 'px';
+    c.style.top = (r.top + r.height / 2) + 'px';
+    c.style.background = colors[i % colors.length];
+    c.style.setProperty('--dx', (Math.random() * 120 - 60) + 'px');
+    c.style.setProperty('--dy', (Math.random() * 160 - 140) + 'px');
+    c.style.animationDelay = Math.random() * 0.2 + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1900);
+  }
+}
+
+function render(){
+  const g = goals.find(x => x.id === view);
+  if (!g) { view = 'all'; renderAll(); } else renderDetail(g);
+  save();
+}
+function go(v){ view = v; render(); window.scrollTo(0, 0); }
+
+
+// ---------- 이벤트 ----------
+const cur = () => goals.find(x => x.id === view);
+const taskOf = (g, target) => { const li = target.closest('[data-task]'); return li && g.tasks.find(x => x.id === li.dataset.task); };
+
+
+document.addEventListener('click', e => {
+  const sp = e.target.closest('.sp');
+  if (sp) { if (e.detail === 0) doStep(sp); return; }   // 키보드(Enter/Space)로 누른 경우
+
+  const nav = e.target.closest('[data-nav]');
+  if (nav) {
+    if (nav.dataset.nav === 'new') { go('all'); document.getElementById('goalInput')?.focus(); }
+    else go(nav.dataset.nav);
+    return;
+  }
+  const act = e.target.dataset.act, g = cur(); if (!act || !g) return;
+  if (act === 'del-goal') {
+    if (!confirm(`"${g.title}" 목표를 삭제할까요?`)) return;
+    goals = goals.filter(x => x !== g); view = 'all';
+  } else if (act === 'del-task') g.tasks = g.tasks.filter(x => x !== taskOf(g, e.target));
+  else return;
+  render();
+});
+
+document.addEventListener('change', e => {
+  if (e.target.dataset.act !== 'toggle') return;
+  const g = cur(), t = g && taskOf(g, e.target); if (!t) return;
+  t.done = e.target.checked;
+  e.target.closest('.task').classList.toggle('done', t.done);
+  save(); refreshDetail(g);
+});
+
+document.addEventListener('input', e => {
+  const act = e.target.dataset.act, g = cur(); if (!act || !g) return;
+  const t = taskOf(g, e.target);
+  if (act === 'rename-goal') g.title = e.target.value;
+  else if (act === 'rename-task' && t) t.name = e.target.value;
+  else if (act === 'weight' && t) {
+    if (e.target.value.trim() === '') t.weight = null;          // 비우면 자동(1/N)
+    else {
+      let v = parseFloat(e.target.value);
+      if (isNaN(v)) return;
+      v = Math.max(0, v);
+      const max = maxFor(g, t);
+      if (v > max) {                                            // 합계 100% 초과 방지
+        v = max; e.target.value = fmt(max);
+        toast('각 할 일의 비중 합계는 100%를 초과할 수 없어요');
+      }
+      t.weight = v;
+    }
+    refreshDetail(g);
+  } else return;
+  save();
+});
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'newGoal') {
+    const inp = document.getElementById('goalInput');
+    const title = inp.value.trim(); if (!title) return;
+    const g = { id: uid(), title, color: nextColor(), tasks: [] };
+    goals.push(g); go(g.id);
+    document.querySelector('.add-task input')?.focus();
+    return;
+  }
+  if (e.target.dataset.act !== 'add-task') return;
+  const g = cur(); if (!g) return;
+  const name = e.target.name.value.trim(); if (!name) return;
+  let w = parseFloat(e.target.weight.value);
+  if (isNaN(w)) w = null;                                       // 비워 두면 자동(1/N)
+  else {
+    w = Math.max(0, w);
+    const max = Math.max(0, 100 - manualSum(g));
+    if (w > max) { w = max; toast('각 할 일의 비중 합계는 100%를 초과할 수 없어요'); }
+  }
+  g.tasks.push({ id: uid(), name, weight: w, done: false });
+  render();
+  document.querySelector('.add-task input')?.focus();
+});
+
+render();
+</script>
+</body>
+</html>
