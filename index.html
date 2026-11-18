@@ -385,7 +385,7 @@ function renderDetail(g){
         <h3>할 일 목록 <span class="remain" hidden></span></h3>
         <ul class="tasks">${tasks}</ul>
         <form class="add-task" data-act="add-task">
-          <input type="text" name="name" placeholder="할 일 추가" maxlength="60" required>
+          <input type="text" name="name" placeholder="할 일 추가" maxlength="60">
           <div class="nw"><span class="wbox lg"><input type="number" inputmode="decimal" name="weight" placeholder="비중" min="0" max="100" step="1" aria-label="비중 (비워 두면 자동)">${SPIN}</span><span class="unit">%</span></div>
           <button class="primary" type="submit">추가</button>
         </form>
@@ -516,7 +516,8 @@ document.addEventListener('submit', e => {
   }
   if (e.target.dataset.act !== 'add-task') return;
   const g = cur(); if (!g) return;
-  const name = e.target.name.value.trim(); if (!name) return;
+  const typed = e.target.name.value.trim();
+  const name = typed || `할 일 ${g.tasks.length + 1}`;          // 이름을 비우면 기본 이름으로 추가
   let w = parseFloat(e.target.weight.value);
   if (isNaN(w)) w = null;                                       // 비워 두면 자동(1/N)
   else {
@@ -524,9 +525,14 @@ document.addEventListener('submit', e => {
     const max = Math.max(0, 100 - manualSum(g));
     if (w > max) { w = max; toast('각 할 일의 비중 합계는 100%를 초과할 수 없어요'); }
   }
-  g.tasks.push({ id: uid(), name, weight: w, done: false });
+  const t = { id: uid(), name, weight: w, done: false };
+  g.tasks.push(t);
   render();
-  document.querySelector('.add-task input')?.focus();
+  if (typed) document.querySelector('.add-task input')?.focus();
+  else {                                                        // 기본 이름이면 바로 고칠 수 있게 선택
+    const inp = document.querySelector(`[data-task="${t.id}"] .name`);
+    inp?.focus(); inp?.select();
+  }
 });
 
 render();
